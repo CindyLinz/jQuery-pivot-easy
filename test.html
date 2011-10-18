@@ -1,0 +1,31 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Test jQuery-pivot-easy</title>
+        <script src=http://code.jquery.com/jquery-1.6.4.min.js></script>
+        <script src=jquery-pivot-easy.js></script>
+        <script>$(function(){
+            $('body').append($.pivotEasy(
+                [
+                    { a: 1, b: 2, c: 3, data: 'x1' },
+                    { a: 2, b: 2, c: 3, data: 'x2' },
+                    { a: 2, b: 2, c: 3, data: 'x3' },
+                    { a: 2, b: 2, c: 3, data: 'x4' },
+                    { a: 1, b: 4, c: 2, data: 'x5' }
+                ],
+                [
+                    { field: 'a', label: 'A' },
+                    { field: 'b', label: 'B' }
+                ],
+                [
+                    { field: 'c', label: 'C' }
+                ],
+                function(data){
+                    return data.length + ': ' + $.map(data, function(elem){ return elem.data }).join(',');
+                }
+            ));
+        })</script>
+    </head>
+    <body>
+    </body>
+</html>
