@@ -14,11 +14,11 @@
                     { a: 1, b: 4, c: 2, data: 'x5' }
                 ],
                 [
-                    { field: 'a', label: 'A' },
+                    { field: 'a', label: 'A', valueAlias: { '1': '一' } },
                     { field: 'b', label: 'B' }
                 ],
                 [
-                    { field: 'c', label: 'C' }
+                    { field: 'c', label: 'C', valueAlias: { '2': '二' } }
                 ],
                 function(data){
                     return data.length + ': ' + $.map(data, function(elem){ return elem.data }).join(',');

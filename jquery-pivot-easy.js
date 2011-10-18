@@ -168,6 +168,13 @@
         return build(data, col_tree, row_tree, 0);
     }
 
+    function takeAlias(fields, i, field){
+        if( fields && fields[i] && fields[i].valueAlias && field in fields[i].valueAlias )
+            return fields[i].valueAlias[field];
+        else
+            return field;
+    }
+
     $.pivotEasy = function(data, cols, rows, renderer){
         var col_tree = {};
         var col_tree_size = build_field_tree(col_tree, data, cols, 0);
@@ -183,8 +190,8 @@
         for(i=0; i<rows.length; ++i)
             cell[cols.length][i] = [rows[i].label];
 
-        put_tree(0, rows.length+1, col_tree, function(label, r, c, size){ cell[r][c] = [label, 1, size] });
-        put_tree(0, cols.length+1, row_tree, function(label, r, c, size){ cell[c][r] = [label, size, 1] });
+        put_tree(0, rows.length+1, col_tree, function(label, r, c, size){ cell[r][c] = [takeAlias(cols, r, label), 1, size] });
+        put_tree(0, cols.length+1, row_tree, function(label, r, c, size){ cell[c][r] = [takeAlias(rows, r, label), size, 1] });
 
         var data_enum = data_enumerator(data, cols, col_tree, rows, row_tree);
         //alert(JSON.stringify(data_enum)+':'+rows+'|'+cols);
