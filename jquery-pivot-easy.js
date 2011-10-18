@@ -8,7 +8,7 @@
   * Date: 2011.10.18
   */
 (function($){
-    function build_field_tree(root, data, fields, depth){
+    function build_field_tree(root, data, fields, depth, aggregate){
         if( depth>=fields.length )
             return 1;
         var f = fields[depth].field;
@@ -44,8 +44,14 @@
                         return 0;
         }), function(){
             root[this] = {};
-            size += build_field_tree(root[this], data_group[this], fields, depth+1);
+            size += build_field_tree(root[this], data_group[this], fields, depth+1, aggregate);
         });
+        if( fields[depth].aggregate ){
+            for( value in fields[depth].aggregate ){
+                root[value] = {};
+                size += build_field_tree(root[value], data, fields, depth+1, true);
+            }
+        }
         return size;
     }
 
@@ -162,7 +168,7 @@
     }
 
     function data_enumerator(data, cols, col_tree, rows, row_tree){
-        function build(data, col_tree, row_tree, depth){
+        function build(data, col_tree, row_tree, depth, aggregate){
             var group_keys, group_data;
             if( depth < rows.length ){
                 group_keys = keys(row_tree);
@@ -173,7 +179,7 @@
                 group_data = group_by_key(data, cols[depth-rows.length].field, group_keys);
             }
             else{
-                return [data];
+                return [{aggregate: aggregate, data: data}];
             }
 
             var i;
@@ -181,14 +187,20 @@
             var child;
             for(i=0; i<group_data.length; ++i){
                 if( depth < rows.length )
-                    child = build(group_data[i], col_tree, row_tree[group_keys[i]], depth+1);
+                    if( rows[depth].aggregate && group_keys[i] in rows[depth].aggregate )
+                        child = build(data, col_tree, row_tree[group_keys[i]], depth+1, rows[depth].aggregate[group_keys[i]]);
+                    else
+                        child = build(group_data[i], col_tree, row_tree[group_keys[i]], depth+1, aggregate);
                 else
-                    child = build(group_data[i], col_tree[group_keys[i]], row_tree, depth+1);
+                    if( cols[depth-rows.length].aggregate && group_keys[i] in cols[depth-rows.length].aggregate )
+                        child = build(data, col_tree[group_keys[i]], row_tree, depth+1, cols[depth-rows.length].aggregate[group_keys[i]]);
+                    else
+                        child = build(group_data[i], col_tree[group_keys[i]], row_tree, depth+1, aggregate);
                 out = out.concat(child);
             }
             return out;
         }
-        return build(data, col_tree, row_tree, 0);
+        return build(data, col_tree, row_tree, 0, null);
     }
 
     function takeAlias(fields, i, field){
@@ -200,9 +212,9 @@
 
     $.pivotEasy = function(data, cols, rows, renderer){
         var col_tree = {};
-        var col_tree_size = build_field_tree(col_tree, data, cols, 0);
+        var col_tree_size = build_field_tree(col_tree, data, cols, 0, false);
         var row_tree = {};
-        var row_tree_size = build_field_tree(row_tree, data, rows, 0);
+        var row_tree_size = build_field_tree(row_tree, data, rows, 0, false);
 
         var cell = new_cell(cols.length+1+row_tree_size, rows.length+1+col_tree_size, ['']);
         cell[0][0] = ['&nbsp;', cols.length, rows.length];
@@ -220,8 +232,10 @@
         //alert(JSON.stringify(data_enum)+':'+rows+'|'+cols);
         var cell_data;
         for(i=0; i<row_tree_size; ++i)
-            for(j=0; j<col_tree_size; ++j)
-                cell[cols.length+1+i][rows.length+1+j] = [renderer(data_enum.shift())];
+            for(j=0; j<col_tree_size; ++j){
+                cell_data = data_enum.shift();
+                cell[cols.length+1+i][rows.length+1+j] = [ ( cell_data.aggregate ? cell_data.aggregate : renderer )(cell_data.data) ];
+            }
 
         return cell2table(cell);
     };
