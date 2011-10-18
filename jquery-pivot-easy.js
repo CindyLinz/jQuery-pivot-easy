@@ -18,8 +18,31 @@
                 data_group[this[f]] = [];
             data_group[this[f]].push(this);
         });
+        var value_order = {};
+        var i = 0, value;
+        if( fields[depth].valueAlias )
+            for( value in fields[depth].valueAlias ){
+                value_order[value] = i;
+                ++i;
+            }
         var size = 0;
-        $.each($.map(data_group, function(dummy, key){ return key }).sort(), function(){
+        $.each($.map(data_group, function(dummy, key){ return key }).sort(function(a,b){
+            if( a in value_order )
+                if( b in value_order )
+                    return value_order[a] - value_order[b];
+                else
+                    return -1;
+            else
+                if( b in value_order )
+                    return 1;
+                else
+                    if( a<b )
+                        return -1;
+                    else if( a>b )
+                        return 1;
+                    else
+                        return 0;
+        }), function(){
             root[this] = {};
             size += build_field_tree(root[this], data_group[this], fields, depth+1);
         });
