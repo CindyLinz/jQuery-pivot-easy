@@ -1,11 +1,11 @@
 /*!
-  * jQuery Menu Skeleton Library v0.01
+  * jQuery Menu Skeleton Library v0.02
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
   * Copyright 2011, Cindy Wang (CindyLinz)
   * Dual licensed under the MIT or GPL Version 2 licenses.
   *
-  * Date: 2011.10.18
+  * Date: 2011.10.19
   */
 (function($){
     function build_field_tree(root, data, fields, depth, aggregate){
@@ -237,6 +237,6 @@
                 cell[cols.length+1+i][rows.length+1+j] = [ ( cell_data.aggregate ? cell_data.aggregate : renderer )(cell_data.data) ];
             }
 
-        return cell2table(cell);
+        return $(cell2table(cell));
     };
 })(jQuery)
