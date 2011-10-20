@@ -1,5 +1,5 @@
 /*!
-  * jQuery Menu Skeleton Library v0.04
+  * jQuery Menu Skeleton Library v0.05
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
   * Copyright 2011, Cindy Wang (CindyLinz)
@@ -75,7 +75,7 @@
         var skip = {};
         var r, c;
         for(r=0; r<cell.length; ++r){
-            html += '<tr>';
+            html += '<tr valign=top>';
             if( !cell[r] )
                 continue;
             for(c=0; c<cell[r].length; ++c){
