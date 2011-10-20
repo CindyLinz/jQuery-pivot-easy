@@ -1,5 +1,5 @@
 /*!
-  * jQuery Menu Skeleton Library v0.03
+  * jQuery Menu Skeleton Library v0.04
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
   * Copyright 2011, Cindy Wang (CindyLinz)
@@ -108,8 +108,10 @@
         var w = off_w;
         $.each(tree, function(key){
             var size = put_tree(off_h+1, w, this, put);
-            put(key, off_h, w, size);
-            w += size;
+            if( size>0 ){
+                put(key, off_h, w, size);
+                w += size;
+            }
         });
         if( w==off_w )
             return 1;
