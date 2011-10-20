@@ -1,17 +1,30 @@
 /*!
-  * jQuery Menu Skeleton Library v0.02
+  * jQuery Menu Skeleton Library v0.03
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
   * Copyright 2011, Cindy Wang (CindyLinz)
   * Dual licensed under the MIT or GPL Version 2 licenses.
   *
-  * Date: 2011.10.19
+  * Date: 2011.10.20
   */
 (function($){
+    function grep_data_by_field(data, field, allowed){
+        var data2 = [];
+        var i;
+        for(i=0; i<data.length; ++i)
+            if( data[i][field] in allowed )
+                data2.push(data[i]);
+        return data2;
+    }
+
     function build_field_tree(root, data, fields, depth, aggregate){
         if( depth>=fields.length )
             return 1;
         var f = fields[depth].field;
+        var valueAlias = fields[depth].valueAlias;
+        var i;
+        if( valueAlias && fields[depth].aliasOnly )
+            data = grep_data_by_field(data, f, valueAlias);
         var data_group = {};
         $.each(data, function(){
             if( !data_group[this[f]] )
@@ -19,12 +32,14 @@
             data_group[this[f]].push(this);
         });
         var value_order = {};
-        var i = 0, value;
-        if( fields[depth].valueAlias )
-            for( value in fields[depth].valueAlias ){
+        var value;
+        i = 0;
+        if( valueAlias ){
+            for( value in valueAlias ){
                 value_order[value] = i;
                 ++i;
             }
+        }
         var size = 0;
         $.each($.map(data_group, function(dummy, key){ return key }).sort(function(a,b){
             if( a in value_order )
@@ -187,13 +202,19 @@
             var child;
             for(i=0; i<group_data.length; ++i){
                 if( depth < rows.length )
-                    if( rows[depth].aggregate && group_keys[i] in rows[depth].aggregate )
+                    if( rows[depth].aggregate && group_keys[i] in rows[depth].aggregate ){
+                        if( rows[depth].aliasOnly && rows[depth].valueAlias )
+                            data = grep_data_by_field(data, rows[depth].field, rows[depth].valueAlias);
                         child = build(data, col_tree, row_tree[group_keys[i]], depth+1, rows[depth].aggregate[group_keys[i]]);
+                    }
                     else
                         child = build(group_data[i], col_tree, row_tree[group_keys[i]], depth+1, aggregate);
                 else
-                    if( cols[depth-rows.length].aggregate && group_keys[i] in cols[depth-rows.length].aggregate )
+                    if( cols[depth-rows.length].aggregate && group_keys[i] in cols[depth-rows.length].aggregate ){
+                        if( cols[depth-rows.length].aliasOnly && cols[depth-rows.length].valueAlias )
+                            data = grep_data_by_field(data, cols[depth-rows.length].field, cols[depth-rows.length].valueAlias);
                         child = build(data, col_tree[group_keys[i]], row_tree, depth+1, cols[depth-rows.length].aggregate[group_keys[i]]);
+                    }
                     else
                         child = build(group_data[i], col_tree[group_keys[i]], row_tree, depth+1, aggregate);
                 out = out.concat(child);
