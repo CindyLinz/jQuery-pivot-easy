@@ -1,5 +1,5 @@
 /*!
-  * jQuery Menu Skeleton Library v0.05
+  * jQuery Menu Skeleton Library v0.06
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
   * Copyright 2011, Cindy Wang (CindyLinz)
@@ -23,7 +23,7 @@
         var f = fields[depth].field;
         var valueAlias = fields[depth].valueAlias;
         var i;
-        if( valueAlias && fields[depth].aliasOnly )
+        if( fields[depth].aliasOnly )
             data = grep_data_by_field(data, f, valueAlias);
         var data_group = {};
         $.each(data, function(){
@@ -41,7 +41,7 @@
             }
         }
         var size = 0;
-        $.each($.map(data_group, function(dummy, key){ return key }).sort(function(a,b){
+        var group_key = keys(data_group).sort(function(a,b){
             if( a in value_order )
                 if( b in value_order )
                     return value_order[a] - value_order[b];
@@ -57,14 +57,24 @@
                         return 1;
                     else
                         return 0;
-        }), function(){
-            root[this] = {};
-            size += build_field_tree(root[this], data_group[this], fields, depth+1, aggregate);
         });
+        var group_size, group;
+        for(i=0; i<group_key.length; ++i){
+            group = {};
+            group_size = build_field_tree(group, data_group[group_key[i]], fields, depth+1, aggregate);
+            if( group_size>0 ){
+                root[group_key[i]] = group;
+                size += group_size;
+            }
+        }
         if( fields[depth].aggregate ){
             for( value in fields[depth].aggregate ){
-                root[value] = {};
-                size += build_field_tree(root[value], data, fields, depth+1, true);
+                group = {};
+                group_size = build_field_tree(group, data, fields, depth+1, true);
+                if( group_size>0 ){
+                    size += group_size;
+                    root[value] = group;
+                }
             }
         }
         return size;
@@ -108,10 +118,8 @@
         var w = off_w;
         $.each(tree, function(key){
             var size = put_tree(off_h+1, w, this, put);
-            if( size>0 ){
-                put(key, off_h, w, size);
-                w += size;
-            }
+            put(key, off_h, w, size);
+            w += size;
         });
         if( w==off_w )
             return 1;
@@ -205,7 +213,7 @@
             for(i=0; i<group_data.length; ++i){
                 if( depth < rows.length )
                     if( rows[depth].aggregate && group_keys[i] in rows[depth].aggregate ){
-                        if( rows[depth].aliasOnly && rows[depth].valueAlias )
+                        if( rows[depth].aliasOnly )
                             data = grep_data_by_field(data, rows[depth].field, rows[depth].valueAlias);
                         child = build(data, col_tree, row_tree[group_keys[i]], depth+1, rows[depth].aggregate[group_keys[i]]);
                     }
@@ -252,7 +260,6 @@
         put_tree(0, cols.length+1, row_tree, function(label, r, c, size){ cell[c][r] = [takeAlias(rows, r, label), size, 1] });
 
         var data_enum = data_enumerator(data, cols, col_tree, rows, row_tree);
-        //alert(JSON.stringify(data_enum)+':'+rows+'|'+cols);
         var cell_data;
         for(i=0; i<row_tree_size; ++i)
             for(j=0; j<col_tree_size; ++j){

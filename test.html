@@ -20,7 +20,8 @@
                     { field: 'b', label: 'B', valueAlias: { 2: 2, 4: 4 }, aggregate: { '總計': function(data){ return data.length } }, aliasOnly: true }
                 ],
                 [
-                    { field: 'c', label: 'C', valueAlias: { '3': '三' }, aggregate: { 'All': function(data){ return data.length } } }
+                    { field: 'c', label: 'C', valueAlias: { '3': '三' }, aggregate: { 'All': function(data){ return data.length } } }/*,
+                    { field: 'c', label: 'C', valueAlias: {}, aliasOnly: true }*/
                 ],
                 function(data){
                     return data.length + ': ' + $.map(data, function(elem){ return elem.data }).join(',');
