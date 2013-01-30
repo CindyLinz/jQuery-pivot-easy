@@ -13,14 +13,15 @@
                     { a: 1, b: 4, c: 3, data: 'x6' },
                     { a: 2, b: 2, c: 3, data: 'x4' },
                     { a: 1, b: 4, c: 2, data: 'x5' },
-                    { a: 1, b: 8, c: 2, data: 'x7' }
+                    { a: 1, b: 8, c: 2, data: 'x7' },
+                    { a: 2, b: 2, c: 4, data: 'x4' }
                 ],
                 [
                     { field: 'a', label: 'A', valueAlias: { '1': '一' }, aggregate: { 'count': function(data){ return data.length } } },
                     { field: 'b', label: 'B', valueAlias: { 2: 2, 4: 4 }, aggregate: { '總計': function(data){ return data.length } }, aliasOnly: true }
                 ],
                 [
-                    { field: 'c', label: 'C', valueAlias: { '3': '三' }, aggregate: { 'All': function(data){ return data.length } } }/*,
+                    { field: 'c', label: 'C', valueAlias: function(f){ if( f<=3 ) return f+'o'; return 0 }, aliasOnly: true, aggregate: { 'All': function(data){ return data.length } } }/*,
                     { field: 'c', label: 'C', valueAlias: {}, aliasOnly: true }*/
                 ],
                 function(data){

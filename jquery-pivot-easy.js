@@ -11,9 +11,16 @@
     function grep_data_by_field(data, field, allowed){
         var data2 = [];
         var i;
-        for(i=0; i<data.length; ++i)
-            if( data[i][field] in allowed )
-                data2.push(data[i]);
+        if( typeof(allowed)==='function' ){
+            for(i=0; i<data.length; ++i)
+                if( allowed(data[i][field]) )
+                    data2.push(data[i]);
+        }
+        else{
+            for(i=0; i<data.length; ++i)
+                if( data[i][field] in allowed )
+                    data2.push(data[i]);
+        }
         return data2;
     }
 
@@ -34,7 +41,7 @@
         var value_order = {};
         var value;
         i = 0;
-        if( valueAlias ){
+        if( valueAlias && typeof(valueAlias)!=='function' ){
             for( value in valueAlias ){
                 value_order[value] = i;
                 ++i;
@@ -235,10 +242,14 @@
     }
 
     function takeAlias(fields, i, field){
-        if( fields && fields[i] && fields[i].valueAlias && field in fields[i].valueAlias )
-            return fields[i].valueAlias[field];
-        else
-            return field;
+        if( fields && fields[i] && fields[i].valueAlias )
+            if( typeof(fields[i].valueAlias)==='function' )
+                return fields[i].valueAlias(field) || field;
+            else{
+                if( field in fields[i].valueAlias )
+                    return fields[i].valueAlias[field];
+            }
+        return field;
     }
 
     $.pivotEasy = function(data, cols, rows, renderer){
