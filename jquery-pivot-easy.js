@@ -1,11 +1,11 @@
 /*!
-  * jQuery Menu Skeleton Library v0.06
+  * jQuery Menu Skeleton Library v0.07
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
-  * Copyright 2011, Cindy Wang (CindyLinz)
+  * Copyright 2011-2013, Cindy Wang (CindyLinz)
   * Dual licensed under the MIT or GPL Version 2 licenses.
   *
-  * Date: 2011.10.20
+  * Date: 2013.1.30
   */
 (function($){
     function grep_data_by_field(data, field, allowed){
