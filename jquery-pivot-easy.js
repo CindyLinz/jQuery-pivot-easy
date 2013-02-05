@@ -1,11 +1,11 @@
 /*!
-  * jQuery Menu Skeleton Library v0.07
+  * jQuery Menu Skeleton Library v0.08
   * https://github.com/CindyLinz/jQuery-pivot-easy
   *
   * Copyright 2011-2013, Cindy Wang (CindyLinz)
   * Dual licensed under the MIT or GPL Version 2 licenses.
   *
-  * Date: 2013.1.30
+  * Date: 2013.2.5
   */
 (function($){
     function grep_data_by_field(data, field, allowed){
@@ -38,49 +38,37 @@
                 data_group[this[f]] = [];
             data_group[this[f]].push(this);
         });
-        var value_order = {};
-        var value;
-        i = 0;
-        if( valueAlias && typeof(valueAlias)!=='function' ){
-            for( value in valueAlias ){
-                value_order[value] = i;
-                ++i;
-            }
+        var size = 0, value;
+        var group_key = keys(data_group);
+        if( typeof(fields[depth].orderCmp)==='function' )
+            group_key.sort(fields[depth].orderCmp);
+        if( fields[depth].orderCmp instanceof Array ){
+            var value_order = {};
+            i = 0;
+            for(i=0; i<fields[depth].orderCmp.length; ++i)
+                value_order[fields[depth].orderCmp[i]] = i+1;
+            group_key.sort(function(a,b){
+                a = value_order[a] || fields[depth].orderCmp.length + 1;
+                b = value_order[b] || fields[depth].orderCmp.length + 1;
+                return a-b;
+            });
         }
-        var size = 0;
-        var group_key = keys(data_group).sort(function(a,b){
-            if( a in value_order )
-                if( b in value_order )
-                    return value_order[a] - value_order[b];
-                else
-                    return -1;
-            else
-                if( b in value_order )
-                    return 1;
-                else
-                    if( a<b )
-                        return -1;
-                    else if( a>b )
-                        return 1;
-                    else
-                        return 0;
-        });
         var group_size, group;
         for(i=0; i<group_key.length; ++i){
-            group = {};
+            group = [];
             group_size = build_field_tree(group, data_group[group_key[i]], fields, depth+1, aggregate);
             if( group_size>0 ){
-                root[group_key[i]] = group;
+                root.push([group_key[i], group]);
                 size += group_size;
             }
         }
         if( fields[depth].aggregate ){
             for( value in fields[depth].aggregate ){
-                group = {};
+                group = [];
                 group_size = build_field_tree(group, data, fields, depth+1, true);
                 if( group_size>0 ){
                     size += group_size;
-                    root[value] = group;
+                    root.push([value, group]);
                 }
             }
         }
@@ -122,12 +110,14 @@
     }
 
     function put_tree(off_h, off_w, tree, put){
-        var w = off_w;
-        $.each(tree, function(key){
-            var size = put_tree(off_h+1, w, this, put);
+        var w = off_w, key, value, i;
+        for(i=0; i<tree.length; ++i){
+            key = tree[i][0];
+            value = tree[i][1];
+            var size = put_tree(off_h+1, w, value, put);
             put(key, off_h, w, size);
             w += size;
-        });
+        }
         if( w==off_w )
             return 1;
         else
@@ -171,10 +161,16 @@
     }
 
     function keys(obj){
-        var key;
-        out = [];
+        var key, out = [];
         for( key in obj )
             out.push(key);
+        return out;
+    }
+
+    function order_keys(obj){
+        var out = [], i;
+        for(i=0; i<obj.length; ++i)
+            out.push(obj[i][0]);
         return out;
     }
 
@@ -203,11 +199,11 @@
         function build(data, col_tree, row_tree, depth, aggregate){
             var group_keys, group_data;
             if( depth < rows.length ){
-                group_keys = keys(row_tree);
+                group_keys = order_keys(row_tree);
                 group_data = group_by_key(data, rows[depth].field, group_keys);
             }
             else if( depth < rows.length+cols.length ){
-                group_keys = keys(col_tree);
+                group_keys = order_keys(col_tree);
                 group_data = group_by_key(data, cols[depth-rows.length].field, group_keys);
             }
             else{
@@ -222,18 +218,18 @@
                     if( rows[depth].aggregate && group_keys[i] in rows[depth].aggregate ){
                         if( rows[depth].aliasOnly )
                             data = grep_data_by_field(data, rows[depth].field, rows[depth].valueAlias);
-                        child = build(data, col_tree, row_tree[group_keys[i]], depth+1, rows[depth].aggregate[group_keys[i]]);
+                        child = build(data, col_tree, row_tree[i][1], depth+1, rows[depth].aggregate[group_keys[i]]);
                     }
                     else
-                        child = build(group_data[i], col_tree, row_tree[group_keys[i]], depth+1, aggregate);
+                        child = build(group_data[i], col_tree, row_tree[i][1], depth+1, aggregate);
                 else
                     if( cols[depth-rows.length].aggregate && group_keys[i] in cols[depth-rows.length].aggregate ){
                         if( cols[depth-rows.length].aliasOnly && cols[depth-rows.length].valueAlias )
                             data = grep_data_by_field(data, cols[depth-rows.length].field, cols[depth-rows.length].valueAlias);
-                        child = build(data, col_tree[group_keys[i]], row_tree, depth+1, cols[depth-rows.length].aggregate[group_keys[i]]);
+                        child = build(data, col_tree[i][1], row_tree, depth+1, cols[depth-rows.length].aggregate[group_keys[i]]);
                     }
                     else
-                        child = build(group_data[i], col_tree[group_keys[i]], row_tree, depth+1, aggregate);
+                        child = build(group_data[i], col_tree[i][1], row_tree, depth+1, aggregate);
                 out = out.concat(child);
             }
             return out;
@@ -253,9 +249,9 @@
     }
 
     $.pivotEasy = function(data, cols, rows, renderer){
-        var col_tree = {};
+        var col_tree = [];
         var col_tree_size = build_field_tree(col_tree, data, cols, 0, false);
-        var row_tree = {};
+        var row_tree = [];
         var row_tree_size = build_field_tree(row_tree, data, rows, 0, false);
 
         var cell = new_cell(cols.length+1+row_tree_size, rows.length+1+col_tree_size, ['']);
